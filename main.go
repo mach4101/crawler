@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"regexp"
-	"strings"
 
+	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/unicode"
@@ -67,15 +67,33 @@ func main() {
 	//		fmt.Println("there are not exist covid-19")
 	//	}
 
-	headerRE := regexp.MustCompile(
-		`<li class=".*?" .*?><a target="_blank" href="/newsDetail_forward_.*?" class="index_inherit__A1ImK">(.*?)</a></li>`,
+	// headerRE := regexp.MustCompile(
+	//
+	//	`<li class=".*?" .*?><a target="_blank" href="/newsDetail_forward_.*?" class="index_inherit__A1ImK">(.*?)</a></li>`,
+	//
+	// )
+	//
+	// matches := headerRE.FindAllSubmatch(body, -1)
+	//
+	//	for _, m := range matches {
+	//		if !strings.HasPrefix(string(m[1]), "<img") {
+	//			fmt.Println("fetch card news:", string(m[1]))
+	//		}
+	//	}
+
+	// XPATH parse
+
+	doc, err := htmlquery.Parse(bytes.NewReader(body))
+	if err != nil {
+		fmt.Printf("htmlquery.Parse fail: %v", err)
+	}
+
+	nodes := htmlquery.Find(
+		doc,
+		`//*[@id="__next"]/main/div[2]/div[3]/div[2]/div[1]/div[1]/div/div[3]/div[2]/ul/li/a[@target="_blank"]`,
 	)
 
-	matches := headerRE.FindAllSubmatch(body, -1)
-
-	for _, m := range matches {
-		if !strings.HasPrefix(string(m[1]), "<img") {
-			fmt.Println("fetch card news:", string(m[1]))
-		}
+	for _, node := range nodes {
+		fmt.Println("fetch card ", node.FirstChild.Data)
 	}
 }
