@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/html/charset"
@@ -51,18 +52,30 @@ func main() {
 		return
 	}
 
-	fmt.Println(string(body))
+	// fmt.Println(string(body))
 
 	// fmt.Println("body:", string(body))
-	numLinks := strings.Count(string(body), "<a>")
+	// numLinks := strings.Count(string(body), "<a>")
+	//
+	//	exist := strings.Contains(string(body), "疫情")
+	//
+	//	fmt.Printf("there are %d links!\n", numLinks)
+	//
+	//	if exist {
+	//		fmt.Println("there are exist covid-19")
+	//	} else {
+	//		fmt.Println("there are not exist covid-19")
+	//	}
 
-	exist := strings.Contains(string(body), "疫情")
+	headerRE := regexp.MustCompile(
+		`<li class=".*?" .*?><a target="_blank" href="/newsDetail_forward_.*?" class="index_inherit__A1ImK">(.*?)</a></li>`,
+	)
 
-	fmt.Printf("there are %d links!\n", numLinks)
+	matches := headerRE.FindAllSubmatch(body, -1)
 
-	if exist {
-		fmt.Println("there are exist covid-19")
-	} else {
-		fmt.Println("there are not exist covid-19")
+	for _, m := range matches {
+		if !strings.HasPrefix(string(m[1]), "<img") {
+			fmt.Println("fetch card news:", string(m[1]))
+		}
 	}
 }
